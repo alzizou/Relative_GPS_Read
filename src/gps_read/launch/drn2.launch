@@ -1,0 +1,3 @@
+<launch>
+	<node name="px4_com_DRN2" pkg="gps_read" type="px4_com_DRN2.py" output="screen" />
+</launch>

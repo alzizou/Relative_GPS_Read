@@ -1,0 +1,8 @@
+prefix=/home/ubuntu/ali_ws/Relative_GPS_Read/install
+
+Name: gps_read
+Description: Description of gps_read
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/ubuntu/ali_ws/Relative_GPS_Read/install/lib 
+Requires: 

@@ -1,0 +1,2 @@
+gps_read
+-DPYTHON_EXECUTABLE=/usr/bin/python3 -DCATKIN_DEVEL_PREFIX=/home/ubuntu/ali_ws/Relative_GPS_Read/devel -DCMAKE_INSTALL_PREFIX=/home/ubuntu/ali_ws/Relative_GPS_Read/install -G Unix Makefiles
