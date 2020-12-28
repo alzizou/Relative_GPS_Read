@@ -20,6 +20,7 @@ Other_Drone = ('192.168.3.183',8100)
 Results_File_REL = open(r"/home/ubuntu/ali_ws/logs/Results_File_REL.txt","w+")
 Results_File_DRN1 = open(r"/home/ubuntu/ali_ws/logs/Results_File_DRN1.txt","w+")
 Results_File_DRN2 = open(r"/home/ubuntu/ali_ws/logs/Results_File_DRN2.txt","w+")
+Results_File_DRN1_Local = open(r"/home/ubuntu/ali_ws/logs/Results_File_DRN1_Local.txt","w+")
 
 class GPS_data:
 	lat=0
@@ -42,11 +43,16 @@ class NED_vector:
 NED_rel_pos = NED_vector()
 NED_rel_vel = NED_vector()
 
+GPS1_Local_NED = NED_vector()
+
 jsn_GPS_This_Drone = {}
 jsn_GPS_Other_Drone = {}
 
 def clean_shutdown():
+        Results_File_REL.close()
 	Results_File_DRN1.close()
+        Results_File_DRN2.close()
+        Results_File_DRN1_Local.close()
 	print("The connection is terminated!")
 
 def GPS2NED_conversion(inp_GPS1,inp_GPS2):
@@ -74,7 +80,7 @@ def GPS2NED_conversion(inp_GPS1,inp_GPS2):
 
 def px4_com_DRN1():
 
-	global GPS1, GPS2, jsn_GPS_This_Drone, jsn_GPS_Other_Drone
+        global GPS1, GPS2, jsn_GPS_This_Drone, jsn_GPS_Other_Drone, GPS1_Local_NED
 
 	time_stmp = 0.0
 	rospy.init_node("PX4_com_DRN1", anonymous=True)
@@ -90,7 +96,7 @@ def px4_com_DRN1():
 		#(START) receiving the GPS data of this drone from PX4
 		msg = PX4.recv_match(type='GLOBAL_POSITION_INT',blocking=True)
 		if not msg:
-			print("No GPS data is received!")
+                        print("No global GPS data is received!")
 			jsn_GPS_This_Drone = json.dumps({"lat":GPS1.lat,"lon":GPS1.lon,"alt":GPS1.alt,
 				"rel_alt":GPS1.rel_alt,"vx":GPS1.vx,"vy":GPS1.vy,"vz":GPS1.vz,"hdg":GPS1.hdg})
 		else:
@@ -110,6 +116,18 @@ def px4_com_DRN1():
 				"rel_alt":GPS1.rel_alt,"vx":GPS1.vx,"vy":GPS1.vy,"vz":GPS1.vz,"hdg":GPS1.hdg})
 			Results_File_DRN1.write("%.9f %d %d %d %d %d\r\n" % (rospy.get_time(),
 				GPS1.lat,GPS1.lon,GPS1.alt,GPS1.rel_alt,GPS1.hdg))
+                #......................................................................................................
+                msg1 = PX4.recv_match(type='LOCAL_POSITION_NED',blocking=True)
+                if not msg:
+                        print("No local GPS data is received!")
+                else:
+                        GPS1_Local_NED.x = msg1.x
+                        GPS1_Local_NED.y = msg1.y
+                        GPS1_Local_NED.z = msg1.z
+                        print("GPS local NED position data: x=%.3f --- y=%.3f --- z=%.3f" %
+                                (GPS1_Local_NED.x,GPS1_Local_NED.y,GPS1_Local_NED.z))
+                        Results_File_DRN1_Local.write("%.9f %.6f %.6f %.6f\r\n" % (rospy.get_time(),
+                                GPS1_Local_NED.x,GPS1_Local_NED.y,GPS1_Local_NED.z))
 		#(END) receiving the GPS data of the other drone via UDP
 		#------------------------------------------------------------------------------------------
 		#(START) recieving the GPS data of other drone via UDP + sending the GPS data of this drone

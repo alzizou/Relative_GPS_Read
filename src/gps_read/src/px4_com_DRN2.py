@@ -19,6 +19,7 @@ Other_Drone = ('192.168.3.184',8100)
 
 Results_File_REL2 = open(r"/home/ubuntu/ali_ws/logs/Results_File_REL2.txt","w+")
 Results_File_DRN2 = open(r"/home/ubuntu/ali_ws/logs/Results_File_DRN2.txt","w+")
+Results_File_DRN2_Local = open(r"/home/ubuntu/ali_ws/logs/Results_File_DRN2_Local.txt","w+")
 
 class GPS_data:
 	lat=0
@@ -40,6 +41,8 @@ class NED_vector:
 
 NED_rel_pos = NED_vector()
 NED_rel_vel = NED_vector()
+
+GPS2_Local_NED = NED_vector()
 
 jsn_GPS_This_Drone = {}
 jsn_GPS_Other_Drone = {}
@@ -73,7 +76,7 @@ def GPS2NED_conversion(inp_GPS1,inp_GPS2):
 
 def px4_com_DRN2():
 
-	global GPS1, GPS2, jsn_GPS_This_Drone, jsn_GPS_Other_Drone
+        global GPS1, GPS2, jsn_GPS_This_Drone, jsn_GPS_Other_Drone, GPS2_Local_NED
 
 	time_stmp = 0.0
 	rospy.init_node("PX4_com_DRN2", anonymous=True)
@@ -107,6 +110,18 @@ def px4_com_DRN2():
 			print("GPS other data: relative_altitude:%d --- heading:%d" % (GPS1.rel_alt,GPS1.hdg))
 			jsn_GPS_This_Drone = json.dumps({"lat":GPS1.lat,"lon":GPS1.lon,"alt":GPS1.alt,
 				"rel_alt":GPS1.rel_alt,"vx":GPS1.vx,"vy":GPS1.vy,"vz":GPS1.vz,"hdg":GPS1.hdg})
+                #......................................................................................................
+                msg1 = PX4.recv_match(type='LOCAL_POSITION_NED',blocking=True)
+                if not msg:
+                        print("No local GPS data is received!")
+                else:
+                        GPS2_Local_NED.x = msg1.x
+                        GPS2_Local_NED.y = msg1.y
+                        GPS2_Local_NED.z = msg1.z
+                        print("GPS local NED position data: x=%.3f --- y=%.3f --- z=%.3f" %
+                                (GPS2_Local_NED.x,GPS2_Local_NED.y,GPS2_Local_NED.z))
+                        Results_File_DRN2_Local.write("%.9f %.6f %.6f %.6f\r\n" % (rospy.get_time(),
+                                GPS2_Local_NED.x,GPS2_Local_NED.y,GPS2_Local_NED.z))
 		#(END) receiving the GPS data of the other drone via UDP
 		#--------------------------------------------------------------------------------------------------------
 		#(START) recieving the GPS data of other drone via UDP + sending the GPS data of this drone
