@@ -125,8 +125,8 @@ def px4_com_DRN1():
 #			GPS1.yaw = msg.yaw # uint16_t, cdeg, Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use 65535 if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.
 			
 			#Use speed and course over ground to estimate vx,vy
-			GPS1.vx = GPS1.vel * cosf(GPS1.cog*3.1415/18000.0) / 10.0
-			GPS1.vy = GPS1.vel * sinf(GPS1.cog*3.1415/18000.0) / 10.0
+			GPS1.vx = GPS1.vel * mt.cos(GPS1.cog*3.1415/18000.0) / 10.0
+			GPS1.vy = GPS1.vel * mt.sin(GPS1.cog*3.1415/18000.0) / 10.0
 
 			print("GPS position data: lattitude=%d --- longitude=%d --- altitude=%d" %
 				(GPS1.alt,GPS1.lon,GPS1.alt))

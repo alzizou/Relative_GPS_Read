@@ -147,8 +147,8 @@ def px4_com_DRN2():
 			GPS2.satellites_visible = int(jsn_GPS_Other_Drone.get("satellites_visible"))
 		
 			#Use speed and course over ground to estimate vx,vy
-			GPS2.vx = GPS2.vel * cosf(GPS2.cog*3.1415/18000.0) / 10.0
-			GPS2.vy = GPS2.vel * sinf(GPS2.cog*3.1415/18000.0) / 10.0
+			GPS2.vx = GPS2.vel * mt.cos(GPS2.cog*3.1415/18000.0) / 10.0
+			GPS2.vy = GPS2.vel * mt.sin(GPS2.cog*3.1415/18000.0) / 10.0
 		except socket.timeout:
 			print("No GPS data received from other drone!")
 		#(END) receiving the GPS data of the other drone via UDP + sending the GPS data of this drone
