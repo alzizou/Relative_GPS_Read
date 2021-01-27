@@ -97,7 +97,7 @@ def px4_com_DRN2():
 		#(START) receiving the GPS data of this drone from PX4
 		msg = PX4.recv_match(type='GPS_RAW_INT',blocking=False)
 		if not msg:
-            print("No GPS data is received!")
+			print("No GPS data is received!")
 			jsn_GPS_This_Drone = json.dumps({"time_usec":GPS1.time_usec,"fix_type":GPS1.fix_type,"lat":GPS1.lat,"lon":GPS1.lon,"alt":GPS1.alt,
 				"eph":GPS1.eph,"epv":GPS1.epv,"vel":GPS1.vel,"cog":GPS1.cog,"satellites_visible":GPS1.satellites_visible})
 		else:
