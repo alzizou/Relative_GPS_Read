@@ -32,12 +32,12 @@ class GPS_data:
 	vel = 0
 	cog = 0
 	satellites_visible = 0
-	alt_ellipsoid = 0
-	h_acc = 0
-	v_acc = 0
-	vel_acc = 0
-	hdg_acc = 0
-	yaw = 0
+	#alt_ellipsoid = 0
+	#h_acc = 0
+	#v_acc = 0
+	#vel_acc = 0
+	#hdg_acc = 0
+	#yaw = 0
 	vx=0
 	vy=0
 
@@ -77,7 +77,7 @@ def GPS2NED_conversion(inp_GPS1,inp_GPS2):
 			1.175*mt.cos(4.0*lat0*mt.pi/180.0) - 0.0023*mt.cos(6.0*lat0*mt.pi/180.0))
 	NED_rel_pos.y = delta_lon*(111412.84*mt.cos(lat0*mt.pi/180)-93.5*mt.cos(3.0*lat0*mt.pi/180.0) + 
 			0.118*mt.cos(5.0*lat0*mt.pi/180))
-	NED_rel_pos.z = - float(inp_GPS2.rel_alt - inp_GPS1.rel_alt)
+	NED_rel_pos.z = - float(inp_GPS2.alt - inp_GPS1.alt)
 	
 	NED_rel_vel.x = float(inp_GPS2.vx - inp_GPS1.vx)
 	NED_rel_vel.y = float(inp_GPS2.vy - inp_GPS1.vy)
@@ -104,8 +104,7 @@ def px4_com_DRN1():
 		if not msg:
 			print("No GPS data is received!")
 			jsn_GPS_This_Drone = json.dumps({"time_usec":GPS1.time_usec,"fix_type":GPS1.fix_type,"lat":GPS1.lat,"lon":GPS1.lon,"alt":GPS1.alt,
-				"eph":GPS1.eph,"epv":GPS1.epv,"vel":GPS1.vel,"cog":GPS1.cog,"satellites_visible":GPS1.satellites_visible,"alt_ellipsoid":GPS1.alt_ellipsoid,
-				"h_acc":GPS1.h_acc,"v_acc":GPS1.v_acc,"vel_acc":GPS1.vel_acc,"hdg_acc":GPS1.hdg_acc, "yaw":GPS1.yaw})
+				"eph":GPS1.eph,"epv":GPS1.epv,"vel":GPS1.vel,"cog":GPS1.cog,"satellites_visible":GPS1.satellites_visible})
 		else:
 			# GPS_RAW_INT (#24), Type, Units, Description
 			GPS1.time_usec = msg.time_usec # uint64_t, us, Timestamp (UNIX Epoch time or time since system boot). The receiving end can infer timestamp format (since 1.1.1970 or since system boot) by checking for the magnitude of the number.
@@ -118,12 +117,12 @@ def px4_com_DRN1():
 			GPS1.vel = msg.vel # uint16_t, cm/s, GPS ground speed. If unknown, set to: UINT16_MAX
 			GPS1.cog = msg.cog # uint16_t, cdeg, Course over ground (NOT heading, but direction of movement) in degrees * 100, 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
 			GPS1.satellites_visible = msg.satellites_visible # uint8_t, Number of satellites visible. If unknown, set to 255
-			GPS1.alt_ellipsoid = msg.alt_ellipsoid # int32_t, mm, Altitude (above WGS84, EGM96 ellipsoid). Positive for up.
-			GPS1.h_acc = msg.h_acc # uint32_t, mm, Position uncertainty.
-			GPS1.v_acc = msg.v_acc # uint32_t, mm, Altitude uncertainty.
-			GPS1.vel_acc = msg.vel_acc # uint32_t, mm, Speed uncertainty.
-			GPS1.hdg_acc = msg.hdg_acc # uint32_t, degE5, Heading / track uncertainty
-			GPS1.yaw = msg.yaw # uint16_t, cdeg, Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use 65535 if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.
+#			GPS1.alt_ellipsoid = msg.alt_ellipsoid # int32_t, mm, Altitude (above WGS84, EGM96 ellipsoid). Positive for up.
+#			GPS1.h_acc = msg.h_acc # uint32_t, mm, Position uncertainty.
+#			GPS1.v_acc = msg.v_acc # uint32_t, mm, Altitude uncertainty.
+#			GPS1.vel_acc = msg.vel_acc # uint32_t, mm, Speed uncertainty.
+#			GPS1.hdg_acc = msg.hdg_acc # uint32_t, degE5, Heading / track uncertainty
+#			GPS1.yaw = msg.yaw # uint16_t, cdeg, Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use 65535 if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.
 			
 			#Use speed and course over ground to estimate vx,vy
 			GPS1.vx = GPS1.vel * cosf(GPS1.cog*3.1415/18000.0) / 10.0
@@ -134,9 +133,8 @@ def px4_com_DRN1():
 
 			print("GPS velocity data: vel=%d --- cog=%d" % (GPS1.vel,GPS1.cog))
 			jsn_GPS_This_Drone = json.dumps({"time_usec":GPS1.time_usec,"fix_type":GPS1.fix_type,"lat":GPS1.lat,"lon":GPS1.lon,"alt":GPS1.alt,
-				"eph":GPS1.eph,"epv":GPS1.epv,"vel":GPS1.vel,"cog":GPS1.cog,"satellites_visible":GPS1.satellites_visible,"alt_ellipsoid":GPS1.alt_ellipsoid,
-				"h_acc":GPS1.h_acc,"v_acc":GPS1.v_acc,"vel_acc":GPS1.vel_acc,"hdg_acc":GPS1.hdg_acc, "yaw":GPS1.yaw, "vx":GPS1.vx, "vy":GPS1.vy})
-			Results_File_DRN1.write("%.9f %d %d %d %d %d %d %d\r\n" % (rospy.get_time(),
+				"eph":GPS1.eph,"epv":GPS1.epv,"vel":GPS1.vel,"cog":GPS1.cog,"satellites_visible":GPS1.satellites_visible, "vx":GPS1.vx, "vy":GPS1.vy})
+			Results_File_DRN1.write("%.9f %d \r\n" % (rospy.get_time(),
 				GPS1.lat,GPS1.lon,GPS1.alt,GPS1.vel,GPS1.cog,GPS1.fix_type,GPS1.satellites_visible))
 
 		#(END) receiving the GPS data of the other drone via UDP
