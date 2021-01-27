@@ -134,7 +134,7 @@ def px4_com_DRN1():
 			print("GPS velocity data: vel=%d --- cog=%d" % (GPS1.vel,GPS1.cog))
 			jsn_GPS_This_Drone = json.dumps({"time_usec":GPS1.time_usec,"fix_type":GPS1.fix_type,"lat":GPS1.lat,"lon":GPS1.lon,"alt":GPS1.alt,
 				"eph":GPS1.eph,"epv":GPS1.epv,"vel":GPS1.vel,"cog":GPS1.cog,"satellites_visible":GPS1.satellites_visible, "vx":GPS1.vx, "vy":GPS1.vy})
-			Results_File_DRN1.write("%.9f %d \r\n" % (rospy.get_time(),
+			Results_File_DRN1.write("%.9f %d %d %d %d %d %d %d \r\n" % (rospy.get_time(),
 				GPS1.lat,GPS1.lon,GPS1.alt,GPS1.vel,GPS1.cog,GPS1.fix_type,GPS1.satellites_visible))
 
 		#(END) receiving the GPS data of the other drone via UDP
