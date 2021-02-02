@@ -18,10 +18,10 @@ This_Drone.settimeout(0.1)
 Other_Drone = ('192.168.3.184',8100)
 
 This_Drone2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-This_Drone2.bind(('192.168.3.184',8000))
+This_Drone2.bind(('192.168.3.226',8000))
 This_Drone2.settimeout(0.1)
 
-Other_Drone2 = ('192.168.3.226',8000)
+Other_Drone2 = ('192.168.3.184',8000)
 
 class GPS_data:
 	time_usec = 0
