@@ -21,6 +21,10 @@ Results_File_REL = open(r"/home/ubuntu/ali_ws/logs/Results_File_REL.txt","w+")
 Results_File_DRN1 = open(r"/home/ubuntu/ali_ws/logs/Results_File_DRN1.txt","w+")
 Results_File_DRN2 = open(r"/home/ubuntu/ali_ws/logs/Results_File_DRN2.txt","w+")
 
+Results_File_REL_est = open(r"/home/ubuntu/ali_ws/logs/Results_File_REL_est.txt","w+")
+Results_File_DRN1_est = open(r"/home/ubuntu/ali_ws/logs/Results_File_DRN1_est.txt","w+")
+Results_File_DRN2_est = open(r"/home/ubuntu/ali_ws/logs/Results_File_DRN2_est.txt","w+")
+
 class GPS_data:
 	time_usec = 0
 	fix_type = 0
@@ -32,17 +36,24 @@ class GPS_data:
 	vel = 0
 	cog = 0
 	satellites_visible = 0
-	#alt_ellipsoid = 0
-	#h_acc = 0
-	#v_acc = 0
-	#vel_acc = 0
-	#hdg_acc = 0
-	#yaw = 0
 	vx=0
 	vy=0
 
+class Global_Position_Estimate_data:
+	lat=0
+	lon=0
+	alt=0
+	rel_alt=0
+	vx=0
+	vy=0
+	vz=0
+	hdg=0
+
 GPS1 = GPS_data()
 GPS2 = GPS_data()
+
+Global_Position_Estimate_1 = Global_Position_Estimate_data()
+Global_Position_Estimate_2 = Global_Position_Estimate_data()
 
 class NED_vector:
 	x=0.0
@@ -52,13 +63,20 @@ class NED_vector:
 NED_rel_pos = NED_vector()
 NED_rel_vel = NED_vector()
 
+
 jsn_GPS_This_Drone = {}
 jsn_GPS_Other_Drone = {}
+
+jsn_Global_Position_Estimate_This_Drone = {}
+jsn_Global_Position_Estimate_Other_Drone = {}
 
 def clean_shutdown():
 	Results_File_REL.close()
 	Results_File_DRN1.close()
 	Results_File_DRN2.close()
+	Results_File_REL_est.close()
+	Results_File_DRN1_est.close()
+	Results_File_DRN2_est.close()
 	print("The connection is terminated!")
 
 def GPS2NED_conversion(inp_GPS1,inp_GPS2):
@@ -86,7 +104,8 @@ def GPS2NED_conversion(inp_GPS1,inp_GPS2):
 
 def px4_com_DRN1():
 
-	global GPS1, GPS2, jsn_GPS_This_Drone, jsn_GPS_Other_Drone, GPS1_Local_NED
+	global GPS1, GPS2, jsn_GPS_This_Drone, jsn_GPS_Other_Drone
+	global Global_Position_Estimate_1, Global_Position_Estimate_2, jsn_Global_Position_Estimate_This_Drone, jsn_Global_Position_Estimate_Other_Drone
 
 	time_stmp = 0.0
 	rospy.init_node("PX4_com_DRN1", anonymous=True)
@@ -117,13 +136,7 @@ def px4_com_DRN1():
 			GPS1.vel = msg.vel # uint16_t, cm/s, GPS ground speed. If unknown, set to: UINT16_MAX
 			GPS1.cog = msg.cog # uint16_t, cdeg, Course over ground (NOT heading, but direction of movement) in degrees * 100, 0.0..359.99 degrees. If unknown, set to: UINT16_MAX
 			GPS1.satellites_visible = msg.satellites_visible # uint8_t, Number of satellites visible. If unknown, set to 255
-#			GPS1.alt_ellipsoid = msg.alt_ellipsoid # int32_t, mm, Altitude (above WGS84, EGM96 ellipsoid). Positive for up.
-#			GPS1.h_acc = msg.h_acc # uint32_t, mm, Position uncertainty.
-#			GPS1.v_acc = msg.v_acc # uint32_t, mm, Altitude uncertainty.
-#			GPS1.vel_acc = msg.vel_acc # uint32_t, mm, Speed uncertainty.
-#			GPS1.hdg_acc = msg.hdg_acc # uint32_t, degE5, Heading / track uncertainty
-#			GPS1.yaw = msg.yaw # uint16_t, cdeg, Yaw in earth frame from north. Use 0 if this GPS does not provide yaw. Use 65535 if this GPS is configured to provide yaw and is currently unable to provide it. Use 36000 for north.
-			
+
 			#Use speed and course over ground to estimate vx,vy
 			GPS1.vx = GPS1.vel * mt.cos(GPS1.cog*3.1415/18000.0) / 10.0
 			GPS1.vy = GPS1.vel * mt.sin(GPS1.cog*3.1415/18000.0) / 10.0
@@ -136,6 +149,29 @@ def px4_com_DRN1():
 				"eph":GPS1.eph,"epv":GPS1.epv,"vel":GPS1.vel,"cog":GPS1.cog,"satellites_visible":GPS1.satellites_visible, "vx":GPS1.vx, "vy":GPS1.vy})
 			Results_File_DRN1.write("%.9f %d %d %d %d %d %d %d \r\n" % (rospy.get_time(),
 				GPS1.lat,GPS1.lon,GPS1.alt,GPS1.vel,GPS1.cog,GPS1.fix_type,GPS1.satellites_visible))
+		#--------------------------------------------------------------------------------------------
+		msg_est = PX4.recv_match(type='GLOBAL_POSITION_INT',blocking=True)
+		if not msg_est:
+			print("No global position estimate data is received!")
+			jsn_Global_Position_Estimate_This_Drone = json.dumps({"lat":Global_Position_Estimate_1.lat,"lon":Global_Position_Estimate_1.lon,"alt":Global_Position_Estimate_1.alt,
+				"rel_alt":Global_Position_Estimate_1.rel_alt,"vx":Global_Position_Estimate_1.vx,"vy":Global_Position_Estimate_1.vy,"vz":Global_Position_Estimate_1.vz,"hdg":Global_Position_Estimate_1.hdg})
+		else:
+			Global_Position_Estimate_1.lat = msg_est.lat
+			Global_Position_Estimate_1.lon = msg_est.lon
+			Global_Position_Estimate_1.alt = msg_est.alt
+			Global_Position_Estimate_1.rel_alt = msg_est.relative_alt
+			Global_Position_Estimate_1.vx = msg_est.vx
+			Global_Position_Estimate_1.vy = msg_est.vy
+			Global_Position_Estimate_1.vz = msg_est.vz
+			Global_Position_Estimate_1.hdg = msg_est.hdg
+			print("GPS position data: lattitude=%d --- longitude=%d --- altitude=%d" %
+				(Global_Position_Estimate_1.lat,Global_Position_Estimate_1.lon,Global_Position_Estimate_1.alt))
+			print("GPS velocity data: Vx=%d --- Vy=%d --- Vz=%d" % (Global_Position_Estimate_1.vx,Global_Position_Estimate_1.vy,Global_Position_Estimate_1.vz))
+			print("GPS other data: relative_altitude:%d --- heading:%d" % (Global_Position_Estimate_1.rel_alt,Global_Position_Estimate_1.hdg))
+			jsn_Global_Position_Estimate_This_Drone = json.dumps({"lat":Global_Position_Estimate_1.lat,"lon":Global_Position_Estimate_1.lon,"alt":Global_Position_Estimate_1.alt,
+				"rel_alt":Global_Position_Estimate_1.rel_alt,"vx":Global_Position_Estimate_1.vx,"vy":Global_Position_Estimate_1.vy,"vz":Global_Position_Estimate_1.vz,"hdg":Global_Position_Estimate_1.hdg})
+			Results_File_DRN1_est.write("%.9f %d %d %d %d %d\r\n" % (rospy.get_time(),
+				Global_Position_Estimate_1.lat,Global_Position_Estimate_1.lon,Global_Position_Estimate_1.alt,Global_Position_Estimate_1.rel_alt,Global_Position_Estimate_1.hdg))
 
 		#(END) receiving the GPS data of the other drone via UDP
 		#------------------------------------------------------------------------------------------
@@ -168,7 +204,34 @@ def px4_com_DRN1():
 			% (NED_rel_vel.x,NED_rel_vel.y))
 		Results_File_REL.write("%.9f %.6f %.6f %.6f %.6f %.6f \r\n" % (rospy.get_time(),
 			NED_rel_pos.x,NED_rel_pos.y,NED_rel_pos.z,NED_rel_vel.x,NED_rel_vel.y))
+		#--------------------------------------------------------------------------------------------
+		#(START) recieving the global position estimate data of other drone via UDP + sending the Global position estimate data of this drone  
+		try:
+			This_Drone.sendto(jsn_Global_Position_Estimate_This_Drone.encode(),Other_Drone)
+			Resp, Addrs = This_Drone.recvfrom(10000)
+			jsn_Global_Position_Estimate_Other_Drone = json.loads(Resp.decode())
+			Global_Position_Estimate_2.lat = int(jsn_Global_Position_Estimate_Other_Drone.get("lat"))
+			Global_Position_Estimate_2.lon = int(jsn_Global_Position_Estimate_Other_Drone.get("lon"))
+			Global_Position_Estimate_2.alt = int(jsn_Global_Position_Estimate_Other_Drone.get("alt"))
+			Global_Position_Estimate_2.rel_alt = int(jsn_Global_Position_Estimate_Other_Drone.get("rel_alt"))
+			Global_Position_Estimate_2.vx = int(jsn_Global_Position_Estimate_Other_Drone.get("vx"))
+			Global_Position_Estimate_2.vy = int(jsn_Global_Position_Estimate_Other_Drone.get("vy"))
+			Global_Position_Estimate_2.vz = int(jsn_Global_Position_Estimate_Other_Drone.get("vz"))
+			Global_Position_Estimate_2.hdg = int(jsn_Global_Position_Estimate_Other_Drone.get("hdg"))
+			Results_File_DRN2_est.write("%.9f %d %d %d %d %d\r\n" % (rospy.get_time(),
+				Global_Position_Estimate_2.lat,Global_Position_Estimate_2.lon,Global_Position_Estimate_2.alt,Global_Position_Estimate_2.rel_alt,Global_Position_Estimate_2.hdg))
+		except socket.timeout:
+			print("No global position estimate data received from other drone!")
+		#(END) receiving the GPS data of the other drone via UDP + sending the GPS data of this drone
+		#-------------------------------------------------------------------------------------------
 		#(START) Computing the relative position and velocity between the two drones
+		GPS2NED_conversion(Global_Position_Estimate_1,Global_Position_Estimate_2)
+		print("Relative position by GPS: NED_rel_pos_x=%.3f --- NED_rel_pos_y=%.3f --- NED_rel_pos_z=%.3f" %
+			(NED_rel_pos.x,NED_rel_pos.y,NED_rel_pos.z))
+		print("Relative velocity by GPS: NED_rel_vel_x=%.3f --- NED_rel_vel_y=%.3f" %
+			(NED_rel_vel.x,NED_rel_vel.y))
+		Results_File_REL_est.write("%.9f %.6f %.6f %.6f %.6f %.6f\r\n" % (rospy.get_time(),
+			NED_rel_pos.x,NED_rel_pos.y,NED_rel_pos.z,NED_rel_vel.x,NED_rel_vel.y))
 		#--------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
