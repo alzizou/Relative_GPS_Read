@@ -17,6 +17,12 @@ This_Drone.settimeout(0.1)
 
 Other_Drone = ('192.168.3.184',8100)
 
+This_Drone2 = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+This_Drone2.bind(('192.168.3.184',8000))
+This_Drone2.settimeout(0.1)
+
+Other_Drone2 = ('192.168.3.226',8000)
+
 class GPS_data:
 	time_usec = 0
 	fix_type = 0
@@ -189,8 +195,8 @@ def px4_com_DRN2():
 		#--------------------------------------------------------------------------------------------
 		#(START) recieving the global position estimate data of other drone via UDP + sending the Global position estimate data of this drone  
 		try:
-			This_Drone.sendto(jsn_Global_Position_Estimate_This_Drone.encode(),Other_Drone)
-			Resp, Addrs = This_Drone.recvfrom(10000)
+			This_Drone2.sendto(jsn_Global_Position_Estimate_This_Drone.encode(),Other_Drone2)
+			Resp, Addrs = This_Drone2.recvfrom(10000)
 			jsn_Global_Position_Estimate_Other_Drone = json.loads(Resp.decode())
 			Global_Position_Estimate_2.lat = int(jsn_Global_Position_Estimate_Other_Drone.get("lat"))
 			Global_Position_Estimate_2.lon = int(jsn_Global_Position_Estimate_Other_Drone.get("lon"))
